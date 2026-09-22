@@ -1,0 +1,75 @@
+{
+  "validUsers": [
+    {
+      "caseName": "Active male user",
+      "name": "Arjun Mehta",
+      "gender": "male",
+      "status": "active"
+    },
+    {
+      "caseName": "Inactive female user",
+      "name": "Priya Sharma",
+      "gender": "female",
+      "status": "inactive"
+    },
+    {
+      "caseName": "Name with apostrophe and hyphen",
+      "name": "Liam O'Connor-Smith",
+      "gender": "male",
+      "status": "inactive"
+    },
+    {
+      "caseName": "Name with non-ASCII characters",
+      "name": "Zoë Müller",
+      "gender": "female",
+      "status": "active"
+    }
+  ],
+  "invalidUsers": [
+    {
+      "caseName": "Blank name is rejected",
+      "name": "",
+      "email": "<unique>",
+      "gender": "male",
+      "status": "active",
+      "expectedField": "name",
+      "expectedMessage": "can't be blank"
+    },
+    {
+      "caseName": "Missing email is rejected",
+      "name": "No Email",
+      "email": null,
+      "gender": "female",
+      "status": "active",
+      "expectedField": "email",
+      "expectedMessage": "can't be blank"
+    },
+    {
+      "caseName": "Malformed email is rejected",
+      "name": "Bad Email",
+      "email": "not-an-email",
+      "gender": "male",
+      "status": "active",
+      "expectedField": "email",
+      "expectedMessage": "is invalid"
+    },
+    {
+      "caseName": "Unsupported gender is rejected",
+      "name": "Bad Gender",
+      "email": "<unique>",
+      "gender": "unknown",
+      "status": "active",
+      "expectedField": "gender",
+      "expectedMessage": "can't be blank"
+    },
+    {
+      "caseName": "Unsupported status is rejected",
+      "name": "Bad Status",
+      "email": "<unique>",
+      "gender": "female",
+      "status": "pending",
+      "expectedField": "status",
+      "expectedMessage": "can't be blank"
+    }
+  ]
+}

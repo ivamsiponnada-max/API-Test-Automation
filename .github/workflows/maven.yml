@@ -1,0 +1,102 @@
+name: API Tests
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: "0 6 * * 1-5"   # weekday smoke run against the live API
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment (key prefix in config.properties)"
+        required: false
+        default: "prod"
+
+permissions:
+  contents: write   # needed to push the Allure report to the gh-pages branch
+
+concurrency:
+  group: api-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Run tests & publish Allure report
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    env:
+      GOREST_TOKEN: ${{ secrets.GOREST_TOKEN }}
+      TEST_ENV: ${{ github.event.inputs.environment || 'prod' }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Run API tests
+        id: tests
+        continue-on-error: true   # still build and publish the report when tests fail
+        run: mvn -B -ntp clean test
+
+      - name: Restore Allure history from gh-pages
+        uses: actions/checkout@v4
+        continue-on-error: true   # first run: the branch does not exist yet
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      - name: Add history and executor info to results
+        if: always()
+        run: |
+          mkdir -p target/allure-results
+          if [ -d gh-pages/history ]; then
+            cp -r gh-pages/history target/allure-results/history
+          fi
+          cat > target/allure-results/executor.json <<EOF
+          {
+            "name": "GitHub Actions",
+            "type": "github",
+            "buildName": "${{ github.workflow }} #${{ github.run_number }}",
+            "buildOrder": ${{ github.run_number }},
+            "buildUrl": "${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}",
+            "reportUrl": "https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}/"
+          }
+          EOF
+
+      - name: Generate Allure report
+        if: always()
+        run: mvn -B -ntp allure:report
+
+      - name: Upload Allure results & report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: allure-report-${{ github.run_number }}
+          path: |
+            target/allure-results
+            target/site/allure-maven-plugin
+          retention-days: 14
+
+      - name: Publish report to GitHub Pages
+        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: target/site/allure-maven-plugin
+          commit_message: "Allure report for ${{ github.sha }}"
+
+      - name: Fail the job if tests failed
+        if: steps.tests.outcome == 'failure'
+        run: |
+          echo "::error::API tests failed - see the Allure report for details."
+          exit 1
