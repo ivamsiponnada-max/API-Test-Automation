@@ -10,7 +10,7 @@ An API test automation framework built with **Java 17, REST Assured, TestNG and 
 public [GoRest](https://gorest.co.in) `/users` API, which stores real data, and covers request chaining,
 strict JSON Schema contract checks, data-driven testing, and CI with a published Allure report.
 
-> **Live report:** `https://<your-github-username>.github.io/my-api-test-framework/` (available after the first CI run on `main`)
+> **Live report:** `https://venkatasrivamsiponnada.github.io/API-Test-Automation/` (available after the first CI run on `main`)
 
 ---
 
@@ -122,8 +122,8 @@ my-api-test-framework/
 ## Local Setup
 
 ```bash
-git clone https://github.com/<your-github-username>/my-api-test-framework.git
-cd my-api-test-framework
+git clone https://github.com/VenkataSriVamsiPonnada/API-Test-Automation.git
+cd API-Test-Automation
 ```
 
 Provide your token (never commit it):
